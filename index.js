@@ -1,6 +1,6 @@
 
 const helmet = require("helmet"); //to secure header
-const morgan = require("morgan"); //to log message to console
+const morgan = require("morgan"); //to log http request as a message to console
 const logger = require("./logger");
 const Joi = require("joi"); //to validation
 const express = require("express");
@@ -11,8 +11,14 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(express.static("public"));
 app.use(helmet());
-app.use(morgan("tiny"));
+
 app.use(logger);
+
+//get environment
+if(app.get("env")==="development"){
+    app.use(morgan("tiny"));
+    console.log("Morgan enabled...");
+}
 
 const courses = [
     { id:1 , name: "Course1"},
