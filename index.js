@@ -1,5 +1,6 @@
-const express = require("express");
 
+const Joi = require("joi");
+const express = require("express");
 const app = express();
 app.use(express.json());
 
@@ -13,11 +14,9 @@ const courses = [
 app.get("/", function(req,res){
     res.send("Hello world...!");
 });
-
 app.get("/api/courses", function(req,res){
     res.send(courses);
 });
-
 app.get("/api/courses/:id", function(req,res){
     //res.send(req.params.id);
     const course = courses.find(function(a){
@@ -30,8 +29,6 @@ app.get("/api/courses/:id", function(req,res){
     res.send(course);
     
 });
-
-
 app.get("/api/posts/:year/:month", function(req,res){
     //res.send(req.params);
     res.send(req.query);
@@ -39,8 +36,14 @@ app.get("/api/posts/:year/:month", function(req,res){
 
 
 app.post("/api/courses", function(req,res){
-    if(!req.body.name || req.body.name.length<3){
-        res.status(400).send("Name is required and should be minimum 3 character");
+    const schema = Joi.object({
+        name : Joi.string().min(3).required()
+    });
+
+    const result = schema.validate(req.body);
+
+    if(result.error){
+        res.status(400).send(result.error.message);
         return;
     }
     const course ={
@@ -50,6 +53,7 @@ app.post("/api/courses", function(req,res){
     courses.push(course);
     res.send(courses);
 })
+
 
 const port = process.env.PORT || 3000;
 app.listen(port, function(){
