@@ -1,10 +1,16 @@
 
+const config = require("config");
 const helmet = require("helmet"); //to secure header
 const morgan = require("morgan"); //to log http request as a message to console
 const logger = require("./logger");
 const Joi = require("joi"); //to validation
 const express = require("express");
 const app = express();
+
+//Configuration 
+console.log('Application name: '+config.get("name"));
+console.log('Mail server: '+config.get("mail.host"));
+console.log('Mail password: '+config.get("mail.password"));
 
 //this is kind of Middlewar
 app.use(express.json());
