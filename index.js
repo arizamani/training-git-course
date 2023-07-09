@@ -38,7 +38,11 @@ const courses = [
 
 // This is called a Route
 app.get("/", function(req,res){
-    res.send("Hello world...!");
+    //res.send("Hello world...!");
+    res.render("index",{
+        title: "My Express App",
+        message:"Hello"
+    });
 });
 app.get("/api/courses", function(req,res){
     res.send(courses);
