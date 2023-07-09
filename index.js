@@ -1,4 +1,5 @@
 
+const startupDebug = require("debug")("app:startup");
 const config = require("config");
 const helmet = require("helmet"); //to secure header
 const morgan = require("morgan"); //to log http request as a message to console
@@ -6,6 +7,9 @@ const logger = require("./logger");
 const Joi = require("joi"); //to validation
 const express = require("express");
 const app = express();
+
+app.set("view engine", "pug");
+app.set("views", "./views"); //this is set as a default value (and it is optional)
 
 //Configuration 
 console.log('Application name: '+config.get("name"));
@@ -23,7 +27,7 @@ app.use(logger);
 //get environment
 if(app.get("env")==="development"){
     app.use(morgan("tiny"));
-    console.log("Morgan enabled...");
+    startupDebug("Morgan enabled...");
 }
 
 const courses = [
