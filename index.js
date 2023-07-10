@@ -35,7 +35,7 @@ if(app.get("env")==="development"){
 }
 
 
-
+//make a port ready
 const port = process.env.PORT || 3000;
 app.listen(port, function(){
     console.log(`Listening on port ${port}...`);
