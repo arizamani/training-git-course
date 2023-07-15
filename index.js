@@ -1,4 +1,5 @@
 
+const mongoose = require("mongoose");
 const startupDebug = require("debug")("app:startup");
 const config = require("config");
 const helmet = require("helmet"); //to secure header
@@ -10,14 +11,25 @@ const home = require("./routes/home");
 const express = require("express");
 const app = express();
 
+const databaseUrl = config.get("database.url") + config.get("database.name");
+//console.log(databaseUrl)
+mongoose.connect(databaseUrl)
+    .then(function(){
+        startupDebug(`Connected to MongoDB on port: ${mongoose.connection.port}`);
+    })
+    .catch(function(err){
+        startupDebug(err.message);
+    });
+
+
 app.set("view engine", "pug");
 app.set("views", "./views"); //this is set as a default value (and it is optional)
 
 //Configuration 
-console.log('Application name: '+config.get("name"));
-console.log('Mail server: '+config.get("mail.host"));
-console.log('Mail password: '+config.get("mail.password"));
-
+console.log('Application name: '+ config.get("name"));
+console.log('Mail server: '+ config.get("mail.host"));
+console.log('Mail password: '+ config.get("mail.password"));
+//console.log(config.get("database.url"));
 //this is kind of Middlewar
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
