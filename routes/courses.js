@@ -1,20 +1,31 @@
+
+const db = require("../database/playground");
 const Joi = require("joi"); //to validation
 const express = require("express");
 const router = express.Router();
-
+/*
 const courses = [
     { id:1 , name: "Course1"},
     { id:2 , name: "Course2"},
     { id:3 , name: "Course3"}
 ];
-
+*/
 
 router.get("/", function(req,res){
-    res.send(courses);
+    db.getCourses().then(function(result){
+        res.send(result);
+    })  
 });
 
 router.get("/:id", function(req,res){
-    //res.send(req.params.id);
+    const id = req.params.id;
+    db.getCourse(id).then(function(result){
+        res.send(result);
+    }).catch(function(err){
+        res.send(err.message);
+    });
+
+    /*
     const course = courses.find(function(a){
         return a.id === parseInt(req.params.id);
     });
@@ -23,7 +34,7 @@ router.get("/:id", function(req,res){
         return; 
     } 
     res.send(course);
-    
+    */
 });
 
 router.post("/", function(req,res){
