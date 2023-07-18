@@ -1,7 +1,9 @@
 
+const CustomError = require("../modules/CustomError");
 const startupDebug = require("debug")("app:startup");
 const config = require("config");
 const db = require("mongoose");
+const Joi = require("joi"); //to validation
 
 //Databse connection
 const databaseUrl = config.get("database.url") + config.get("database.name");
@@ -17,17 +19,40 @@ const courseSchema = new db.Schema({
     name: {
         type: String,
         required: '{PATH} is required!',
-        /*
-        validate: [
-            {validator: v => v!="" || v!=null, message: "Name field couldn't be empty" },
-            {validator: validator, message: 'uh oh' }
-        ]
-        */
+        minlength:5,
+        maxlength: 255,
+        //match: /pattern/
+        //lowercase: true
+        //uppercase: true
+        //trim: ture
+
+    },
+    category:{
+        type: String,
+        required: '{PATH} is required!',
+        enum: ['front-end', 'back-end']
     },
     author: {type: String, default: "Arash Zamani"},
     tags: [String],
     date: {type: Date, default: Date.now},
-    isPublished: {type: Boolean, default: false}
+    isPublished: {type: Boolean, default: false},
+    price:{
+        type: Number, 
+        required: [
+            function() { return this.isPublished;},
+            "{PATH} is required"
+        ]
+        //min:5
+        //max:20
+        /*
+        get: funvtion(v){
+            return Math.round(v);
+        }
+        set: funvtion(v){
+            return Math.round(v);
+        }
+        */
+    }
 });
 
 const Course = db.model("Course",courseSchema);
@@ -53,7 +78,7 @@ async function getCourse(id){
 async function updateCourse(id,courseObj){
     
     const course = await Course.findByIdAndUpdate(id,{$set: courseObj},{new: true});
-    if (!course) return Promise.reject(new Error("The course with given id was not found"));
+    if (!course) return Promise.reject(new Error("The course with given id was not found",{cause: {code: 404}}));
 
     startupDebug(course);
     return course;
@@ -61,18 +86,23 @@ async function updateCourse(id,courseObj){
 
 async function createCourse(courseObj){
     const course = new Course(courseObj);
-    //if (!course) return Promise.reject(new Error("Not valid Name format...",{cause: {code: 400}}));
-    /*
-    const course = new Course({
-        name: "React Course",
-        author: "Arash Zamani",
-        tags:["react","frontend"],
-        isPublished: true
-    });
-    */
-    const result = await course.save();
-    startupDebug(result);
-    return result;   
+
+    try{
+        const result = await course.save();
+        startupDebug(result);
+        return result; 
+    }catch(err){
+        let exceptionArray = [];
+        let i = 1;
+        for (const ex in err.errors) {
+            exceptionArray.push(i+ ": " +err.errors[ex].message);
+            i++;
+        }
+        let msg = exceptionArray.toString().replaceAll(","," , ");
+        //console.log(msg);
+        return Promise.reject(new Error(msg,{cause: {code: 400}}));
+    }
+  
 }
 
 async function removeCourse(id){
@@ -82,9 +112,27 @@ async function removeCourse(id){
     return result;
 }
 
+function validateCourse(course,crud){
+    const schema = Joi.object({
+        name : Joi.string().min(3).max(255).alter({
+            post: (schema) => schema.required(),
+            put: (schema) => schema.optional()
+        }),
+        category: Joi.string().required().valid('back-end','front-end'),
+        author: Joi.string().min(3),
+        tags: Joi.array().items(Joi.string()),
+        date: Joi.date(),
+        isPublished: Joi.boolean(),
+        price: Joi.number().when('isPublished', { is: true, then: Joi.optional(), otherwise: Joi.optional()})
+    }).tailor(crud);
+
+    return schema.validate(course);
+}
+
 
 module.exports.getCourses= getCourses;
 module.exports.getCourse= getCourse;
 module.exports.updateCourse= updateCourse;
 module.exports.createCourse= createCourse;
 module.exports.removeCourse= removeCourse;
+module.exports.validateCourse= validateCourse;
