@@ -1,19 +1,8 @@
 
-const CustomError = require("../modules/CustomError");
 const startupDebug = require("debug")("app:startup");
-const config = require("config");
 const db = require("mongoose");
 const Joi = require("joi"); //to validation
 
-//Databse connection
-const databaseUrl = config.get("database.url") + config.get("database.name");
-db.connect(databaseUrl)
-    .then(function(){
-        startupDebug(`Connected to MongoDB on port: ${db.connection.port}`);
-    })
-    .catch(function(err){
-        startupDebug(err.message);
-    });
 //Database Schema
 const courseSchema = new db.Schema({
     name: {
