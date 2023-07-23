@@ -10,6 +10,7 @@ const courses = require("./routes/courses");
 const posts = require("./routes/post");
 const home = require("./routes/home");
 const users = require("./routes/users");
+const auth = require("./routes/auth");
 const express = require("express");
 const app = express();
 
@@ -43,6 +44,7 @@ app.use("/", home);
 app.use("/api/courses", courses);
 app.use("/api/post", posts);
 app.use("/api/users", users);
+app.use("/api/auth", auth);
 
 //get environment
 if(app.get("env")==="development"){

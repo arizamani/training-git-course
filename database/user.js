@@ -1,8 +1,9 @@
 const startupDebug = require("debug")("app:startup");
 const config = require("config");
 const db = require("mongoose");
-const Joi = require("joi"); //to validation
-//const bcrypt = require ("bcrypt");
+const _ = require("lodash");
+const bcrypt = require("bcryptjs");
+const Joi = require("joi"); 
 
 //Database Schema
 const userSchema = new db.Schema({
@@ -28,8 +29,9 @@ const userSchema = new db.Schema({
 
 //Costnat
 const 
-    User = db.model("User", userSchema),
-    errorId = new Error("The user with given id was not found",{cause: {code: 404}});
+    User = db.model("User", userSchema);
+    //errorId = new Error("The user with given id was not found",{cause: {code: 404}});
+    //errorAuth = new Error("The Email or pssword is ivalid",{cause: {code: 400}});
 
 //Function
 async function getUsers(){
@@ -59,11 +61,11 @@ async function updateUser(id,userObj){
 
 async function createUser(userObj){
     const registeredUser = await User.findOne().or([{name: userObj.name},{email: userObj.email}]);
-    console.log(registeredUser);
     if (!registeredUser || registeredUser == null){
-        const user = new User(userObj);
+        const user = new User(_.pick(userObj,['name','email','date','password']));
         try{
-
+            const salt = await bcrypt.genSalt(10);
+            user.password = await bcrypt.hash(user.password,salt);
             const result = await user.save();
             startupDebug(result);
             return result; 
@@ -106,9 +108,8 @@ function validateUser(user,crud){
         .message("for password field the Characters: [ ^, /, \\, :, ;, <, >, =, +, * ] is not valid!")
         .ruleset.pattern(/^([\d\w\S]*[A-Z]+[\d\w\S]*){3}$/)
         .message("Atleast 3 Capital character is needed!")
-        //.ruleset.pattern(/^(([^2])*(2)?([^2])*){1,3}$/)
         .ruleset.custom(function(value, helpers){
-            let counter = 0;
+            let counter = 0; 
             for (let i = 0; i < 10; i++) {
                 let expression = `${i}`;
                 let regex = new RegExp(expression, 'ig');
@@ -118,7 +119,7 @@ function validateUser(user,crud){
                 }
             }
             if (counter>0){
-                throw new Error("Not include",{code:"12"});
+                throw new Error("Not include");  
             }else{
                 return value;
             }
@@ -128,7 +129,7 @@ function validateUser(user,crud){
     return schema.validate(user);
 }
 
-
+module.exports.User = User;
 module.exports.getUsers= getUsers;
 module.exports.getUser= getUser;
 module.exports.updateUser= updateUser;
